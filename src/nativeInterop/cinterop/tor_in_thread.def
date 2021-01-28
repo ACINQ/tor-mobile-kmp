@@ -3,7 +3,7 @@ package = fr.acinq.tor.in_thread
 headers = tor_in_thread.h
 headerFilter = tor_in_thread.h
 
-libraryPaths.ios_x64 = native/build/ios/x86_64/lib
+libraryPaths.ios_x64 = native/build/ios/x64/lib
 libraryPaths.ios_arm64 = native/build/ios/arm64/lib
 
 staticLibraries = \

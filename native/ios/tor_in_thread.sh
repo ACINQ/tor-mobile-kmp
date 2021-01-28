@@ -10,7 +10,7 @@ MIN_IOS_VERSION=12.0
 if [ "$ARCH" == "arm64" ]; then
   SDK="iphoneos"
   HOST_FLAGS="-arch arm64 -arch arm64e -miphoneos-version-min=${MIN_IOS_VERSION} -isysroot $(xcrun --sdk ${SDK} --show-sdk-path)"
-elif [ "$ARCH" == "x86_64" ]; then
+elif [ "$ARCH" == "x64" ]; then
   SDK="iphonesimulator"
   HOST_FLAGS="-arch x86_64 -mios-simulator-version-min=${MIN_IOS_VERSION} -isysroot $(xcrun --sdk ${SDK} --show-sdk-path)"
 else

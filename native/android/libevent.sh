@@ -70,5 +70,5 @@ export LDFLAGS="${HOST_FLAGS}"
 
 make clean
 mkdir -p "${PREFIX}" &> /dev/null
-make -j"${MAKE_JOBS}" V=1
+make -j"${MAKE_JOBS}"
 make install

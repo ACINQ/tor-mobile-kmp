@@ -1,6 +1,7 @@
 plugins {
-    kotlin("multiplatform") version "1.4.21"
     id("com.android.library")
+    kotlin("multiplatform") version "1.4.21"
+    `maven-publish`
 }
 
 group = "fr.acinq.tor"
@@ -11,21 +12,35 @@ repositories {
     jcenter()
 }
 
+android {
+    compileSdkVersion(30)
+    sourceSets["main"].manifest.srcFile("src/androidMain/AndroidManifest.xml")
+    defaultConfig {
+        minSdkVersion(21)
+        targetSdkVersion(30)
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+    externalNativeBuild {
+        cmake {}
+    }
+    externalNativeBuild {
+        cmake {
+            setPath("src/androidMain/c/CMakeLists.txt")
+        }
+    }
+}
+
 kotlin {
     explicitApi()
 
-    android()
+    android {
+        publishLibraryVariants("release")
+    }
 
-    iosX64("ios") {
+    ios {
         compilations["main"].cinterops.create("tor_in_thread") {
             includeDirs.headerFilterOnly("$rootDir/native/tor_in_thread")
-
-            val suffix = when (preset!!.name) {
-                "iosX64" -> "IosX86_64"
-                "arm64" -> "Arm64"
-                else -> error("Unknown target ${preset!!.name}")
-            }
-            tasks[interopProcessingTaskName].dependsOn(":native:buildTor_in_thread$suffix")
+            tasks[interopProcessingTaskName].dependsOn(":native:buildTor_in_thread${target.name.capitalize()}")
         }
     }
 
@@ -62,24 +77,6 @@ kotlin {
     }
 }
 
-android {
-    compileSdkVersion(30)
-    sourceSets["main"].manifest.srcFile("src/androidMain/AndroidManifest.xml")
-    defaultConfig {
-        minSdkVersion(21)
-        targetSdkVersion(30)
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-    }
-    externalNativeBuild {
-        cmake {}
-    }
-    externalNativeBuild {
-        cmake {
-            setPath("src/androidMain/c/CMakeLists.txt")
-        }
-    }
-}
-
 afterEvaluate {
     configure(listOf("Debug", "Release").map { tasks["externalNativeBuild$it"] }) {
         dependsOn(":native:buildTor_in_threadAndroidArm64-v8a")
@@ -89,8 +86,8 @@ afterEvaluate {
     }
 }
 
-//afterEvaluate {
-//    tasks.withType<com.android.build.gradle.tasks.factory.AndroidUnitTest>().all {
-//        enabled = false
-//    }
-//}
+afterEvaluate {
+    tasks.withType<com.android.build.gradle.tasks.factory.AndroidUnitTest>().all {
+        enabled = false
+    }
+}

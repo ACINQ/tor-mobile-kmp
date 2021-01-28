@@ -96,4 +96,4 @@ addLibs("android", "x86_64") { environment("NDK", ndkDir.absolutePath) }
 addLibs("android", "x86") { environment("NDK", ndkDir.absolutePath) }
 
 addLibs("ios", "arm64") {}
-addLibs("ios", "x86_64") {}
+addLibs("ios", "x64") {}
