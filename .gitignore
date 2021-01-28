@@ -1,5 +1,6 @@
 # Build
 build/
+.cxx/
 
 # Idea
 .idea
@@ -12,11 +13,3 @@ local.properties
 
 # OS
 .DS_Store
-
-# XCode
-xcuserdata/
-
-*.iml
-target/
-project/target
-DeleteMe*.scala

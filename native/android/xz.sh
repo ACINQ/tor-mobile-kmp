@@ -31,7 +31,7 @@ if [ "$SYS" == "armv7a" ]; then
   TARGET=arm-linux-androideabi
 fi
 
-HOST_FLAGS="-fpic"
+HOST_FLAGS="-fPIC"
 
 # Compiler options
 OPT_FLAGS="-O3 -g3"

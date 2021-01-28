@@ -31,7 +31,7 @@ if [ "$SYS" == "armv7a" ]; then
   TARGET=arm-linux-androideabi
 fi
 
-HOST_FLAGS="-fpic"
+HOST_FLAGS="-fPIC"
 
 # Compiler options
 OPT_FLAGS="-O3 -g3"
@@ -73,7 +73,7 @@ export LDFLAGS="${HOST_FLAGS}"
 
 make clean
 mkdir -p "${PREFIX}" &> /dev/null
-make -j"${MAKE_JOBS}"
+make -j"${MAKE_JOBS}" V=1
 make install
 
 mkdir -p "${PREFIX}/lib" &> /dev/null

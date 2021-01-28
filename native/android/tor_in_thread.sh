@@ -31,7 +31,7 @@ if [ "$SYS" == "armv7a" ]; then
   TARGET=arm-linux-androideabi
 fi
 
-HOST_FLAGS="-fpic"
+HOST_FLAGS="-fPIC"
 
 # Compiler options
 OPT_FLAGS="-O3 -g3"
@@ -53,7 +53,7 @@ $CC ${HOST_FLAGS} ${OPT_FLAGS} -I"${PREFIX}/include" -c -o build/tor_in_thread.o
 mkdir -p "${PREFIX}/lib" &> /dev/null
 rm -f "${PREFIX}/lib/libtor_in_thread.a"
 $AR r "${PREFIX}/lib/libtor_in_thread.a" "build/tor_in_thread.o"
-$RANLIB -c "${PREFIX}/lib/libtor_in_thread.a"
+$RANLIB "${PREFIX}/lib/libtor_in_thread.a"
 
 mkdir -p "${PREFIX}/include" &> /dev/null
 cp -v tor_in_thread.h "${PREFIX}/include"

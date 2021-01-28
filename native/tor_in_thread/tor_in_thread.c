@@ -37,7 +37,7 @@ void *tor_in_thread_exec(void *ptr) {
     return NULL;
 }
 
-void tor_in_thread_start(int argc, char **argv) {
+void tor_in_thread_start(int argc, const char **argv) {
     if (tor_in_thread_is_running == 1) {
         printf("Cannot start Tor: it is already running!\n");
         return ;

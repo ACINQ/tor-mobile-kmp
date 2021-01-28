@@ -25,11 +25,10 @@ class TorTest {
             val selectorManager = SelectorManager()
             val connection = aSocket(selectorManager)
                 .tcp().connect(Tor.SOCKS_ADDRESS, Tor.SOCKS_PORT)
-//                .tcp().connect("52.222.230.187", 80) // neverssl.com
                 .connection()
 
             // http://jsonplaceholder.typicode.com/posts/1
-            connection.socks5Handshake("172.64.100.5", 80) // neverssl.com
+            connection.socks5Handshake("172.64.100.5", 80)
             connection.output.writeFully("GET /posts/1 HTTP/1.0\nhost: jsonplaceholder.typicode.com\n\n".encodeToByteArray())
             connection.output.flush()
 

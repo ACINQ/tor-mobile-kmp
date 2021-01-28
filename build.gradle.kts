@@ -48,6 +48,8 @@ kotlin {
             dependencies {
                 implementation(kotlin("test-junit"))
                 implementation("junit:junit:4.13.1")
+                implementation("androidx.test.ext:junit:1.1.2")
+                implementation("androidx.test.espresso:espresso-core:3.3.0")
             }
         }
 
@@ -66,5 +68,29 @@ android {
     defaultConfig {
         minSdkVersion(21)
         targetSdkVersion(30)
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+    externalNativeBuild {
+        cmake {}
+    }
+    externalNativeBuild {
+        cmake {
+            setPath("src/androidMain/c/CMakeLists.txt")
+        }
     }
 }
+
+afterEvaluate {
+    configure(listOf("Debug", "Release").map { tasks["externalNativeBuild$it"] }) {
+        dependsOn(":native:buildTor_in_threadAndroidArm64-v8a")
+        dependsOn(":native:buildTor_in_threadAndroidArmeabi-v7a")
+        dependsOn(":native:buildTor_in_threadAndroidX86")
+        dependsOn(":native:buildTor_in_threadAndroidX86_64")
+    }
+}
+
+//afterEvaluate {
+//    tasks.withType<com.android.build.gradle.tasks.factory.AndroidUnitTest>().all {
+//        enabled = false
+//    }
+//}
