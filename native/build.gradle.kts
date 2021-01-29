@@ -76,14 +76,18 @@ fun addLibs(target: String, arch: String, conf: Exec.() -> Unit) {
     }
 }
 
-val localProperties = File("$rootDir/local.properties").takeIf { it.exists() }
-    ?.inputStream()?.use { java.util.Properties().apply { load(it) } }
-    ?: error("Android is enabled but couldn't find local.properties.")
-
-val sdkDir = File(localProperties["sdk.dir"] as? String
-        ?: error("Android is enabled but local.properties does not contain sdk.dir."))
+val sdkDir = File(System.getenv("ANDROID_SDK_ROOT"))
     .takeIf { it.exists() }
-    ?: error("Local.properties sdk.dir does not exist (${localProperties["sdk.dir"]}).")
+    ?: run {
+        val localProperties = File("$rootDir/local.properties").takeIf { it.exists() }
+            ?.inputStream()?.use { java.util.Properties().apply { load(it) } }
+            ?: error("Android is enabled but couldn't find local.properties.")
+
+        File(localProperties["sdk.dir"] as? String
+            ?: error("Android is enabled but local.properties does not contain sdk.dir."))
+            .takeIf { it.exists() }
+            ?: error("Local.properties sdk.dir does not exist (${localProperties["sdk.dir"]}).")
+    }
 
 val projectNdkVersion: String by rootProject.extra
 val ndkDir = sdkDir.resolve("ndk/$projectNdkVersion").takeIf { it.exists() }
