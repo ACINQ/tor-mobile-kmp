@@ -12,8 +12,11 @@ repositories {
     jcenter()
 }
 
+val projectNdkVersion: String by extra { "21.3.6528147" }
+
 android {
     compileSdkVersion(30)
+    ndkVersion = projectNdkVersion
     sourceSets["main"].manifest.srcFile("src/androidMain/AndroidManifest.xml")
     defaultConfig {
         minSdkVersion(21)

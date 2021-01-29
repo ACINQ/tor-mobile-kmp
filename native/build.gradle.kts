@@ -76,8 +76,6 @@ fun addLibs(target: String, arch: String, conf: Exec.() -> Unit) {
     }
 }
 
-val ndkVersion = "21.3.6528147"
-
 val localProperties = File("$rootDir/local.properties").takeIf { it.exists() }
     ?.inputStream()?.use { java.util.Properties().apply { load(it) } }
     ?: error("Android is enabled but couldn't find local.properties.")
@@ -87,8 +85,9 @@ val sdkDir = File(localProperties["sdk.dir"] as? String
     .takeIf { it.exists() }
     ?: error("Local.properties sdk.dir does not exist (${localProperties["sdk.dir"]}).")
 
-val ndkDir = sdkDir.resolve("ndk/$ndkVersion").takeIf { it.exists() }
-    ?: error("Please install Android NDK $ndkVersion.")
+val projectNdkVersion: String by rootProject.extra
+val ndkDir = sdkDir.resolve("ndk/$projectNdkVersion").takeIf { it.exists() }
+    ?: error("Please install Android NDK $projectNdkVersion.")
 
 addLibs("android", "arm64-v8a") { environment("NDK", ndkDir.absolutePath) }
 addLibs("android", "armeabi-v7a") { environment("NDK", ndkDir.absolutePath) }
