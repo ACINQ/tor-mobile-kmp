@@ -13,6 +13,8 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.consumeEach
 import kotlinx.coroutines.channels.onReceiveOrNull
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.selects.select
 import kotlin.random.Random
 
@@ -29,9 +31,10 @@ public class Tor(
 
     private val controlParser = TorControlParser()
 
-    private val subscribedEvents = listOf("NOTICE", "WARN", "ERR")
+    private val subscribedEvents = listOf("STATUS_CLIENT", "NOTICE", "WARN", "ERR")
 
-    public val isRunning: Boolean get() = isTorInThreadRunning()
+    private val torState = MutableStateFlow(TorState.STOPPED)
+    public val state: StateFlow<TorState> = torState
 
     private suspend fun tryConnect(selectorManager: SelectorManager, address: String, port: Int, tries: Int): Socket =
         try {
@@ -61,7 +64,7 @@ public class Tor(
     }
 
     public suspend fun start(scope: CoroutineScope) {
-        if (isRunning) {
+        if (isTorInThreadRunning()) {
             log(LogLevel.ERR, "Cannot start Tor as it is already running!")
             return
         }
@@ -190,6 +193,21 @@ public class Tor(
             "NOTICE" -> log(LogLevel.NOTICE, "TOR: $firstLine")
             "WARN" -> log(LogLevel.WARN, "TOR: $firstLine")
             "ERR" -> log(LogLevel.ERR, "TOR: $firstLine")
+            "STATUS_CLIENT" -> {
+                val (severity: String, action: String) = firstLine.split(' ')
+
+                val newState = when(action) {
+                    "BOOTSTRAP", "ENOUGH_DIR_INFO" -> TorState.STARTING
+                    "CIRCUIT_ESTABLISHED" -> TorState.RUNNING
+                    else -> TorState.STOPPED
+                }
+
+                if (torState.value != newState) {
+                    log(LogLevel.valueOf(severity), "TOR: state changed=$newState")
+                    torState.value = newState
+                }
+
+            }
             else -> log(LogLevel.WARN, "Received unknown event $event (${response.replies})")
         }
     }
@@ -208,16 +226,18 @@ public class Tor(
     }
 
     public suspend fun stop() {
-        if (!isRunning) {
+        if (!isTorInThreadRunning()) {
             log(LogLevel.WARN, "Cannot stop Tor as it is not running!")
             return
         }
 
         requireCommand(TorControlRequest("SIGNAL", listOf("SHUTDOWN")))
         while (true) {
-            if (!isRunning) break
+            if (!isTorInThreadRunning()) break
             delay(20)
         }
+        // Fallback if the circuit did not notified us already
+        torState.value = TorState.STOPPED
     }
 
     public companion object {

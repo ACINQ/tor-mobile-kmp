@@ -6,17 +6,37 @@ import io.ktor.network.sockets.*
 import io.ktor.util.*
 import io.ktor.utils.io.*
 import io.ktor.utils.io.core.*
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 import kotlin.time.ExperimentalTime
 import kotlin.time.minutes
+import kotlin.time.seconds
 
+@OptIn(ExperimentalTime::class, InternalAPI::class)
 class TorTest {
 
-    @OptIn(ExperimentalTime::class, InternalAPI::class)
-    @Test fun simpleHttpRequest() = runSuspendTest(1.minutes) {
+    @Test fun bootstrap() = runSuspendTest {
+        val tor = Tor(
+            dataDirectoryPath = cachesDirectoryPath,
+            log = { level, message -> println("${level.name}: $message") }
+        )
+
+        assertEquals(TorState.STOPPED, tor.state.value)
+
+        tor.start(this)
+
+        tor.state.first { it == TorState.STARTING }
+        tor.state.first { it == TorState.RUNNING }
+
+        tor.stop()
+
+        tor.state.first { it == TorState.STOPPED }
+    }
+
+    @Test fun simpleHttpRequest() = runSuspendTest {
         val tor = Tor(
             dataDirectoryPath = cachesDirectoryPath,
             log = { level, message -> println("${level.name}: $message") }
