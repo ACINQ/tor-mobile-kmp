@@ -6,12 +6,14 @@ import io.ktor.network.sockets.*
 import io.ktor.util.*
 import io.ktor.utils.io.*
 import io.ktor.utils.io.core.*
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 import kotlin.time.ExperimentalTime
 import kotlin.time.minutes
+import kotlin.time.seconds
 
 class TorTest {
 
@@ -22,7 +24,9 @@ class TorTest {
             log = { level, message -> println("${level.name}: $message") }
         )
 
+        assertEquals(TorState.STOPPED, tor.state.value)
         tor.start(this)
+        assertEquals(TorState.RUNNING, tor.state.value)
 
         try {
             SelectorManager().use { selectorManager ->
@@ -40,6 +44,7 @@ class TorTest {
         } finally {
             tor.stop()
         }
+        assertEquals(TorState.STOPPED, tor.state.value)
     }
 
 }

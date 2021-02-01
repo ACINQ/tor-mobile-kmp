@@ -26,3 +26,5 @@ internal fun TorControlResponse.Reply.parseCommandKeyValues(): Pair<String, Map<
         .toMap()
     return command to map
 }
+
+public enum class TorState { STARTING, RUNNING, STOPPED }

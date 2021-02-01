@@ -13,6 +13,8 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.consumeEach
 import kotlinx.coroutines.channels.onReceiveOrNull
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.selects.select
 import kotlin.random.Random
 
@@ -31,7 +33,8 @@ public class Tor(
 
     private val subscribedEvents = listOf("NOTICE", "WARN", "ERR")
 
-    public val isRunning: Boolean get() = isTorInThreadRunning()
+    private val torState = MutableStateFlow(TorState.STOPPED)
+    public val state: StateFlow<TorState> = torState
 
     private suspend fun tryConnect(selectorManager: SelectorManager, address: String, port: Int, tries: Int): Socket =
         try {
@@ -61,12 +64,13 @@ public class Tor(
     }
 
     public suspend fun start(scope: CoroutineScope) {
-        if (isRunning) {
+        if (isTorInThreadRunning()) {
             log(LogLevel.ERR, "Cannot start Tor as it is already running!")
             return
         }
 
         log(LogLevel.NOTICE, "Starting Tor thread")
+        torState.value = TorState.STARTING
 
         val portFile = "$dataDirectoryPath/tor-control.port"
         val dataDir = "$dataDirectoryPath/tor-data"
@@ -178,6 +182,7 @@ public class Tor(
             requireCommand(TorControlRequest("AUTHENTICATE", listOf(Hex.encode(clientHash).toUpperCase())))
             requireCommand(TorControlRequest("TAKEOWNERSHIP"))
             requireCommand(TorControlRequest("SETEVENTS", subscribedEvents))
+            torState.value = TorState.RUNNING
         } catch (ex: Throwable) {
             stop()
             throw ex
@@ -208,16 +213,17 @@ public class Tor(
     }
 
     public suspend fun stop() {
-        if (!isRunning) {
+        if (!isTorInThreadRunning()) {
             log(LogLevel.WARN, "Cannot stop Tor as it is not running!")
             return
         }
 
         requireCommand(TorControlRequest("SIGNAL", listOf("SHUTDOWN")))
         while (true) {
-            if (!isRunning) break
+            if (!isTorInThreadRunning()) break
             delay(20)
         }
+        torState.value = TorState.STOPPED
     }
 
     public companion object {
