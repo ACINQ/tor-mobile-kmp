@@ -15,18 +15,34 @@ import kotlin.time.ExperimentalTime
 import kotlin.time.minutes
 import kotlin.time.seconds
 
+@OptIn(ExperimentalTime::class, InternalAPI::class)
 class TorTest {
 
-    @OptIn(ExperimentalTime::class, InternalAPI::class)
-    @Test fun simpleHttpRequest() = runSuspendTest(1.minutes) {
+    @Test fun bootstrap() = runSuspendTest {
         val tor = Tor(
             dataDirectoryPath = cachesDirectoryPath,
             log = { level, message -> println("${level.name}: $message") }
         )
 
         assertEquals(TorState.STOPPED, tor.state.value)
+
         tor.start(this)
-        assertEquals(TorState.RUNNING, tor.state.value)
+
+        tor.state.first { it == TorState.STARTING }
+        tor.state.first { it == TorState.RUNNING }
+
+        tor.stop()
+
+        tor.state.first { it == TorState.STOPPED }
+    }
+
+    @Test fun simpleHttpRequest() = runSuspendTest {
+        val tor = Tor(
+            dataDirectoryPath = cachesDirectoryPath,
+            log = { level, message -> println("${level.name}: $message") }
+        )
+
+        tor.start(this)
 
         try {
             SelectorManager().use { selectorManager ->
@@ -44,7 +60,6 @@ class TorTest {
         } finally {
             tor.stop()
         }
-        assertEquals(TorState.STOPPED, tor.state.value)
     }
 
 }

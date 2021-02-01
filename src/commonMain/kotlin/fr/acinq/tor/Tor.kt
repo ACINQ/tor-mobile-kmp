@@ -31,7 +31,7 @@ public class Tor(
 
     private val controlParser = TorControlParser()
 
-    private val subscribedEvents = listOf("NOTICE", "WARN", "ERR")
+    private val subscribedEvents = listOf("STATUS_CLIENT", "NOTICE", "WARN", "ERR")
 
     private val torState = MutableStateFlow(TorState.STOPPED)
     public val state: StateFlow<TorState> = torState
@@ -70,7 +70,6 @@ public class Tor(
         }
 
         log(LogLevel.NOTICE, "Starting Tor thread")
-        torState.value = TorState.STARTING
 
         val portFile = "$dataDirectoryPath/tor-control.port"
         val dataDir = "$dataDirectoryPath/tor-data"
@@ -182,7 +181,6 @@ public class Tor(
             requireCommand(TorControlRequest("AUTHENTICATE", listOf(Hex.encode(clientHash).toUpperCase())))
             requireCommand(TorControlRequest("TAKEOWNERSHIP"))
             requireCommand(TorControlRequest("SETEVENTS", subscribedEvents))
-            torState.value = TorState.RUNNING
         } catch (ex: Throwable) {
             stop()
             throw ex
@@ -195,6 +193,21 @@ public class Tor(
             "NOTICE" -> log(LogLevel.NOTICE, "TOR: $firstLine")
             "WARN" -> log(LogLevel.WARN, "TOR: $firstLine")
             "ERR" -> log(LogLevel.ERR, "TOR: $firstLine")
+            "STATUS_CLIENT" -> {
+                val (severity: String, action: String) = firstLine.split(' ')
+
+                val newState = when(action) {
+                    "BOOTSTRAP", "ENOUGH_DIR_INFO" -> TorState.STARTING
+                    "CIRCUIT_ESTABLISHED" -> TorState.RUNNING
+                    else -> TorState.STOPPED
+                }
+
+                if (torState.value != newState) {
+                    log(LogLevel.valueOf(severity), "TOR: state changed=$newState")
+                    torState.value = newState
+                }
+
+            }
             else -> log(LogLevel.WARN, "Received unknown event $event (${response.replies})")
         }
     }
@@ -223,6 +236,7 @@ public class Tor(
             if (!isTorInThreadRunning()) break
             delay(20)
         }
+        // Fallback if the circuit did not notified us already
         torState.value = TorState.STOPPED
     }
 
