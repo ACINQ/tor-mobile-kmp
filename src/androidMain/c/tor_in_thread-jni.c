@@ -20,6 +20,8 @@ JNIEXPORT void JNICALL Java_fr_acinq_tor_TorInThreadNative_start
         jstring arg = (jstring) (*env)->GetObjectArrayElement(env, argArray, i);
         (*env)->ReleaseStringUTFChars(env, arg, argv[i]);
     }
+
+    free(argv);
 }
 
 JNIEXPORT jboolean JNICALL Java_fr_acinq_tor_TorInThreadNative_isRunning

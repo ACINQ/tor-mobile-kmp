@@ -1,31 +1,18 @@
-name: Check
+name: Publish release
 
 on:
-  pull_request:
-    paths-ignore:
-      - '**.md'
-      - '**/.gitignore'
-      - '.github/**'
-      - '!.github/workflows/test.yml'
-  push:
-    branches:
-      - 'master'
-    paths-ignore:
-      - '**.md'
-      - '**/.gitignore'
-      - '.github/**'
-      - '!.github/workflows/test.yml'
+  release:
+    types: [published]
 
 jobs:
-
-  check:
-    name: Check
+  upload:
+    name: Upload
     runs-on: macos-latest
     steps:
       - name: Check out
         uses: actions/checkout@v2
-#        with:
-#          submodules: 'true'
+      #        with:
+      #          submodules: 'true'
       - name: Fetch submodules
         run: git submodule update --init
       - name: Cached Konan
@@ -55,3 +42,19 @@ jobs:
           ndk: 21.3.6528147
           cmake: 3.10.2.4988404
           script: ./gradlew connectedCheck
+      - name: Upload
+        env:
+          BINTRAY_USER: ${{ secrets.bintray_user }}
+          BINTRAY_APIKEY: ${{ secrets.bintray_apikey }}
+        run: ./gradlew publish
+      - name: Discard
+        if: ${{ failure() || cancelled() }}
+        env:
+          BINTRAY_USER: ${{ secrets.bintray_user }}
+          BINTRAY_APIKEY: ${{ secrets.bintray_apikey }}
+        run: ./gradlew postBintrayDiscard
+      - name: Publish
+        env:
+          BINTRAY_USER: ${{ secrets.bintray_user }}
+          BINTRAY_APIKEY: ${{ secrets.bintray_apikey }}
+        run: ./gradlew postBintrayPublish
