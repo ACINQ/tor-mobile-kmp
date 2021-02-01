@@ -26,5 +26,3 @@ internal fun TorControlResponse.Reply.parseCommandKeyValues(): Pair<String, Map<
         .toMap()
     return command to map
 }
-
-public enum class StreamStatus { NEW, SUCCEEDED, CLOSED }

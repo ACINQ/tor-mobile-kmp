@@ -13,8 +13,6 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.consumeEach
 import kotlinx.coroutines.channels.onReceiveOrNull
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.selects.select
 import kotlin.random.Random
 
@@ -31,12 +29,9 @@ public class Tor(
 
     private val controlParser = TorControlParser()
 
-    private val subscribedEvents = listOf("STREAM", "NOTICE", "WARN", "ERR")
+    private val subscribedEvents = listOf("NOTICE", "WARN", "ERR")
 
     public val isRunning: Boolean get() = isTorInThreadRunning()
-
-    private val streamStatus = MutableStateFlow(StreamStatus.CLOSED)
-    public fun subscribeToStreamStatus() : StateFlow<StreamStatus> = streamStatus
 
     private suspend fun tryConnect(selectorManager: SelectorManager, address: String, port: Int, tries: Int): Socket =
         try {
@@ -195,15 +190,6 @@ public class Tor(
             "NOTICE" -> log(LogLevel.NOTICE, "TOR: $firstLine")
             "WARN" -> log(LogLevel.WARN, "TOR: $firstLine")
             "ERR" -> log(LogLevel.ERR, "TOR: $firstLine")
-            "STREAM" -> {
-                val status = firstLine.split(' ')[1]
-                log(LogLevel.NOTICE, "TOR: stream status changed=$status")
-                when(status) {
-                    "NEW" -> streamStatus.value = StreamStatus.NEW
-                    "SUCCEEDED" -> streamStatus.value = StreamStatus.SUCCEEDED
-                    "CLOSED" -> streamStatus.value = StreamStatus.CLOSED
-                }
-            }
             else -> log(LogLevel.WARN, "Received unknown event $event (${response.replies})")
         }
     }
