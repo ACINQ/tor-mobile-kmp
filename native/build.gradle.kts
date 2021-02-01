@@ -76,7 +76,8 @@ fun addLibs(target: String, arch: String, conf: Exec.() -> Unit) {
     }
 }
 
-val sdkDir = System.getenv("ANDROID_SDK_ROOT")?.let { File(it).takeIf { file -> file.exists() } }
+val sdkDir = System.getenv("ANDROID_SDK_ROOT") ?.let { File(it) }
+    ?.takeIf { it.exists() }
     ?: run {
         val localProperties = File("$rootDir/local.properties").takeIf { it.exists() }
             ?.inputStream()?.use { java.util.Properties().apply { load(it) } }
