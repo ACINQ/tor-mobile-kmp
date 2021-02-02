@@ -9,8 +9,7 @@ import io.ktor.utils.io.core.*
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import kotlin.test.Test
-import kotlin.test.assertEquals
+import kotlin.test.*
 import kotlin.time.ExperimentalTime
 import kotlin.time.minutes
 import kotlin.time.seconds
@@ -25,15 +24,22 @@ class TorTest {
         )
 
         assertEquals(TorState.STOPPED, tor.state.value)
+        assertNull(tor.info.value)
 
         tor.start(this)
+
+        assertNotNull(tor.info.value?.version)
+        assertNotEquals("unknown", tor.info.value?.version)
 
         tor.state.first { it == TorState.STARTING }
         tor.state.first { it == TorState.RUNNING }
 
+        assertEquals("UP", tor.info.value?.networkLiveness)
+
         tor.stop()
 
         tor.state.first { it == TorState.STOPPED }
+        assertNull(tor.info.value)
     }
 
     @Test fun simpleHttpRequest() = runSuspendTest {
