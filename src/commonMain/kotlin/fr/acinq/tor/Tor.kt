@@ -33,12 +33,12 @@ public class Tor(
 
     private val subscribedEvents = listOf("STATUS_CLIENT", "NETWORK_LIVENESS", "NOTICE", "WARN", "ERR")
 
-    private val torState = MutableStateFlow(TorState.STOPPED)
-    public val state: StateFlow<TorState> = torState
+    private val _state = MutableStateFlow(TorState.STOPPED)
+    public val state: StateFlow<TorState> get() = _state
 
-    public data class TorInfo(val version: String = "unknown", val networkLiveness: String = "unknown")
+    public data class TorInfo(val version: String = "", val networkLiveness: String = "")
     private val _info = MutableStateFlow<TorInfo?>(null)
-    public val info: StateFlow<TorInfo?> = _info
+    public val info: StateFlow<TorInfo?> get() = _info
 
     private suspend fun tryConnect(selectorManager: SelectorManager, address: String, port: Int, tries: Int): Socket =
         try {
@@ -185,19 +185,20 @@ public class Tor(
             requireCommand(TorControlRequest("AUTHENTICATE", listOf(Hex.encode(clientHash).toUpperCase())))
             requireCommand(TorControlRequest("TAKEOWNERSHIP"))
             requireCommand(TorControlRequest("SETEVENTS", subscribedEvents))
-            getVersion()
+            getInfo()
         } catch (ex: Throwable) {
             stop()
             throw ex
         }
     }
 
-    public suspend fun getVersion() {
-        val response = requireCommand(TorControlRequest("GETINFO", listOf("version")))
+    private suspend fun getInfo() {
+        val response = requireCommand(TorControlRequest("GETINFO", listOf("version", "network-liveness")))
         if (response.isSuccess) {
-            val version = response.replies[0].reply.removePrefix("version=")
-            log(LogLevel.DEBUG, "TOR version: $version")
-            _info.value = _info.value?.copy(version = version) ?: TorInfo(version = version)
+            val version = response.replies[0].reply.split("=")[1]
+            val networkLiveness = response.replies[1].reply.split("=")[1]
+            _info.value = TorInfo(version = version.toLowerCase(), networkLiveness = networkLiveness.toLowerCase())
+            log(LogLevel.DEBUG, "TOR INFO: ${info.value}")
         }
     }
 
@@ -216,15 +217,15 @@ public class Tor(
                     else -> TorState.STOPPED
                 }
 
-                if (torState.value != newState) {
+                if (_state.value != newState) {
                     log(LogLevel.valueOf(severity), "TOR: state changed=$newState")
-                    torState.value = newState
+                    _state.value = newState
                 }
 
             }
             "NETWORK_LIVENESS" -> {
-                log(LogLevel.DEBUG, "TOR: $event $firstLine")
-                _info.value = _info.value?.copy(networkLiveness = firstLine) ?: TorInfo(networkLiveness = firstLine)
+                _info.value = _info.value?.copy(networkLiveness = firstLine.toLowerCase())
+                    ?: TorInfo(networkLiveness = firstLine.toLowerCase())
             }
             else -> log(LogLevel.WARN, "Received unknown event $event (${response.replies})")
         }
@@ -255,7 +256,7 @@ public class Tor(
             delay(20)
         }
         // Fallback if the circuit did not notified us already
-        torState.value = TorState.STOPPED
+        _state.value = TorState.STOPPED
         _info.value = null
     }
 

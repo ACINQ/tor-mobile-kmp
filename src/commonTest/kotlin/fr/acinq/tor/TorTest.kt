@@ -7,7 +7,10 @@ import io.ktor.util.*
 import io.ktor.utils.io.*
 import io.ktor.utils.io.core.*
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import kotlin.test.*
 import kotlin.time.ExperimentalTime
@@ -17,32 +20,36 @@ import kotlin.time.seconds
 @OptIn(ExperimentalTime::class, InternalAPI::class)
 class TorTest {
 
-    @Test fun bootstrap() = runSuspendTest {
+    @Test fun bootstrap() = runSuspendTest(1.minutes) {
         val tor = Tor(
             dataDirectoryPath = cachesDirectoryPath,
             log = { level, message -> println("${level.name}: $message") }
         )
 
-        assertEquals(TorState.STOPPED, tor.state.value)
-        assertNull(tor.info.value)
+        try {
+            assertEquals(TorState.STOPPED, tor.state.value)
+            assertNull(tor.info.value)
 
-        tor.start(this)
+            tor.start(this)
 
-        assertNotNull(tor.info.value?.version)
-        assertNotEquals("unknown", tor.info.value?.version)
+            tor.info.filterNotNull().first { it.version.isNotEmpty() }
 
-        tor.state.first { it == TorState.STARTING }
-        tor.state.first { it == TorState.RUNNING }
+            tor.state.first { it == TorState.STARTING }
+            tor.state.first { it == TorState.RUNNING }
 
-        assertEquals("UP", tor.info.value?.networkLiveness)
+            tor.info.filterNotNull().first { it.networkLiveness == "up" }
 
-        tor.stop()
+            tor.stop()
 
-        tor.state.first { it == TorState.STOPPED }
-        assertNull(tor.info.value)
+            tor.state.first { it == TorState.STOPPED }
+            tor.info.filter { it == null }
+        } catch (ex: Throwable) {
+            tor.stop()
+            throw ex
+        }
     }
 
-    @Test fun simpleHttpRequest() = runSuspendTest {
+    @Test fun simpleHttpRequest() = runSuspendTest(1.minutes) {
         val tor = Tor(
             dataDirectoryPath = cachesDirectoryPath,
             log = { level, message -> println("${level.name}: $message") }
