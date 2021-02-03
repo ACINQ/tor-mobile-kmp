@@ -1,14 +1,23 @@
-import org.gradle.internal.impldep.org.apache.http.auth.UsernamePasswordCredentials
-import org.gradle.internal.impldep.org.apache.http.client.methods.HttpPost
-import org.gradle.internal.impldep.org.apache.http.entity.ContentType
-import org.gradle.internal.impldep.org.apache.http.entity.StringEntity
-import org.gradle.internal.impldep.org.apache.http.impl.auth.BasicScheme
-import org.gradle.internal.impldep.org.apache.http.impl.client.HttpClients
+import io.ktor.client.HttpClient
+import io.ktor.client.features.auth.Auth
+import io.ktor.client.features.auth.providers.basic
+import io.ktor.client.request.post
+import io.ktor.content.TextContent
+import io.ktor.http.ContentType
+import kotlinx.coroutines.runBlocking
 
 plugins {
     id("com.android.library")
     kotlin("multiplatform") version "1.4.21"
     `maven-publish`
+}
+
+buildscript {
+    dependencies {
+        val ktorVersion = "1.3.1"
+        classpath("io.ktor:ktor-client-okhttp:$ktorVersion")
+        classpath("io.ktor:ktor-client-auth-jvm:$ktorVersion")
+    }
 }
 
 group = "fr.acinq.tor"
@@ -160,14 +169,22 @@ publishing {
 }
 
 if (hasBintray) {
+    val client = HttpClient() {
+        install(Auth) {
+            basic {
+                username = bintrayUsername!!
+                password = bintrayApiKey!!
+            }
+        }
+    }
+
     val postBintrayPublish by tasks.creating {
         group = "bintray"
         doLast {
-            HttpClients.createDefault().use { client ->
-                client.execute(HttpPost("https://api.bintray.com/content/acinq/$bintrayRepo/${rootProject.name}/$bintrayVersion/publish").apply {
-                    addHeader(BasicScheme().authenticate(UsernamePasswordCredentials(bintrayUsername, bintrayApiKey), this, null))
-                    entity = StringEntity("{}", ContentType.APPLICATION_JSON)
-                })
+            runBlocking {
+                client.post("https://api.bintray.com/content/acinq/$bintrayRepo/${rootProject.name}/$bintrayVersion/publish") {
+                    body = TextContent("{}", ContentType.Application.Json)
+                }
             }
         }
     }
@@ -175,11 +192,10 @@ if (hasBintray) {
     val postBintrayDiscard by tasks.creating {
         group = "bintray"
         doLast {
-            HttpClients.createDefault().use { client ->
-                client.execute(HttpPost("https://api.bintray.com/content/acinq/$bintrayRepo/${rootProject.name}/$bintrayVersion/publish").apply {
-                    addHeader(BasicScheme().authenticate(UsernamePasswordCredentials(bintrayUsername, bintrayApiKey), this, null))
-                    entity = StringEntity("{ \"discard\": true }", ContentType.APPLICATION_JSON)
-                })
+            runBlocking {
+                client.post("https://api.bintray.com/content/acinq/$bintrayRepo/${rootProject.name}/$bintrayVersion/publish") {
+                    body = TextContent("{ \"discard\": true }", ContentType.Application.Json)
+                }
             }
         }
     }
