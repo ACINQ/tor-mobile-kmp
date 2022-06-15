@@ -49,19 +49,3 @@ jobs:
           ndk: 21.3.6528147
           cmake: 3.10.2.4988404
           script: ./gradlew connectedCheck
-      - name: Upload
-        env:
-          BINTRAY_USER: ${{ secrets.bintray_user }}
-          BINTRAY_APIKEY: ${{ secrets.bintray_apikey }}
-        run: ./gradlew publish -PsnapshotNumber=${{ github.run_number }} -PgitRef=${{ github.ref }}
-      - name: Discard
-        if: ${{ failure() || cancelled() }}
-        env:
-          BINTRAY_USER: ${{ secrets.bintray_user }}
-          BINTRAY_APIKEY: ${{ secrets.bintray_apikey }}
-        run: ./gradlew postBintrayDiscard -PsnapshotNumber=${{ github.run_number }} -PgitRef=${{ github.ref }}
-      - name: Publish
-        env:
-          BINTRAY_USER: ${{ secrets.bintray_user }}
-          BINTRAY_APIKEY: ${{ secrets.bintray_apikey }}
-        run: ./gradlew postBintrayPublish -PsnapshotNumber=${{ github.run_number }} -PgitRef=${{ github.ref }}

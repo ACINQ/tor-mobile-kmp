@@ -1,11 +1,3 @@
-import io.ktor.client.HttpClient
-import io.ktor.client.features.auth.Auth
-import io.ktor.client.features.auth.providers.basic
-import io.ktor.client.request.post
-import io.ktor.content.TextContent
-import io.ktor.http.ContentType
-import kotlinx.coroutines.runBlocking
-
 plugins {
     id("com.android.library")
     kotlin("multiplatform") version "1.4.21"
@@ -126,31 +118,12 @@ afterEvaluate {
 val snapshotNumber: String? by project
 val gitRef: String? by project
 val eapBranch = gitRef?.split("/")?.last() ?: "dev"
-val bintrayVersion = if (snapshotNumber != null) "${project.version}-$eapBranch-$snapshotNumber" else project.version.toString()
-val bintrayRepo = if (snapshotNumber != null) "snapshots" else "libs"
-
-val bintrayUsername: String? = (properties["bintrayUsername"] as String?) ?: System.getenv("BINTRAY_USER")
-val bintrayApiKey: String? = (properties["bintrayApiKey"] as String?) ?: System.getenv("BINTRAY_APIKEY")
-val hasBintray = bintrayUsername != null && bintrayApiKey != null
-if (!hasBintray) logger.warn("Skipping bintray configuration as bintrayUsername or bintrayApiKey is not defined")
 
 publishing {
-    if (hasBintray) {
-        repositories {
-            maven {
-                name = "bintray"
-                setUrl("https://api.bintray.com/maven/acinq/$bintrayRepo/${rootProject.name}/;publish=0")
-                credentials {
-                    username = bintrayUsername
-                    password = bintrayApiKey
-                }
-            }
-        }
-    }
-
     publications.withType<MavenPublication>().configureEach {
-        version = bintrayVersion
+        version = project.version.toString()
         pom {
+            name.set("Kotlin Multiplatform Tor library")
             description.set("A Kotlin Multiplatform library for Android & iOS to start, connect to, and control a Tor proxy.")
             url.set("https://github.com/ACINQ/tor-mobile-kmp")
             licenses {
@@ -164,37 +137,10 @@ publishing {
             scm {
                 connection.set("https://github.com/ACINQ/tor-mobile-kmp.git")
             }
-        }
-    }
-}
-
-if (hasBintray) {
-    val client = HttpClient() {
-        install(Auth) {
-            basic {
-                username = bintrayUsername!!
-                password = bintrayApiKey!!
-            }
-        }
-    }
-
-    val postBintrayPublish by tasks.creating {
-        group = "bintray"
-        doLast {
-            runBlocking {
-                client.post("https://api.bintray.com/content/acinq/$bintrayRepo/${rootProject.name}/$bintrayVersion/publish") {
-                    body = TextContent("{}", ContentType.Application.Json)
-                }
-            }
-        }
-    }
-
-    val postBintrayDiscard by tasks.creating {
-        group = "bintray"
-        doLast {
-            runBlocking {
-                client.post("https://api.bintray.com/content/acinq/$bintrayRepo/${rootProject.name}/$bintrayVersion/publish") {
-                    body = TextContent("{ \"discard\": true }", ContentType.Application.Json)
+            developers {
+                developer {
+                    name.set("ACINQ")
+                    email.set("hello@acinq.co")
                 }
             }
         }
