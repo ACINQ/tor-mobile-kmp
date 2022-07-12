@@ -1,9 +1,9 @@
 [submodule "native/libs/libevent"]
 	path = native/libs/libevent
-	url = git@github.com:libevent/libevent.git
+	url = https://github.com/libevent/libevent.git
 [submodule "native/libs/openssl"]
 	path = native/libs/openssl
-	url = git@github.com:openssl/openssl.git
+	url = https://github.com/openssl/openssl.git
 [submodule "native/libs/tor"]
 	path = native/libs/tor
 	url = https://git.torproject.org/tor.git
