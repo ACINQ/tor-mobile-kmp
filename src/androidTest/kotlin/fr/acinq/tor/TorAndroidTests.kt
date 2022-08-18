@@ -11,16 +11,14 @@ import junit.framework.TestCase
 import kotlinx.coroutines.Dispatchers
 import org.junit.Test
 import org.junit.runner.RunWith
-import java.security.cert.X509Certificate
-import javax.net.ssl.X509TrustManager
+import kotlin.time.Duration
 import kotlin.time.ExperimentalTime
-import kotlin.time.minutes
 
 @RunWith(AndroidJUnit4::class)
 public class TorAndroidTests : TestCase() {
 
     @OptIn(ExperimentalTime::class, InternalAPI::class)
-    @Test public fun sslTest(): Unit = runSuspendTest(1.minutes) {
+    @Test public fun sslTest(): Unit = runSuspendTest(Duration.minutes(1)) {
         val tor = Tor(
             dataDirectoryPath = cachesDirectoryPath,
             log = { level, message -> println("${level.name}: $message") }
