@@ -1,12 +1,11 @@
 pluginManagement {
     repositories {
         google()
-        jcenter()
         gradlePluginPortal()
     }
     resolutionStrategy {
         eachPlugin {
-            if (requested.id.namespace == "com.android") useModule("com.android.tools.build:gradle:4.0.1")
+            if (requested.id.namespace == "com.android") useModule("com.android.tools.build:gradle:7.1.3")
         }
     }
 }

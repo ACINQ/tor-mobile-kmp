@@ -89,9 +89,8 @@ val sdkDir = System.getenv("ANDROID_SDK_ROOT") ?.let { File(it) }
             ?: error("Local.properties sdk.dir does not exist (${localProperties["sdk.dir"]}).")
     }
 
-val projectNdkVersion: String by rootProject.extra
-val ndkDir = sdkDir.resolve("ndk/$projectNdkVersion").takeIf { it.exists() }
-    ?: error("Please install Android NDK $projectNdkVersion.")
+val ndkDir = sdkDir.resolve("ndk/${Versions.ndk}").takeIf { it.exists() }
+    ?: error("Please install Android NDK ${Versions.ndk}.")
 
 addLibs("android", "arm64-v8a") { environment("NDK", ndkDir.absolutePath) }
 addLibs("android", "armeabi-v7a") { environment("NDK", ndkDir.absolutePath) }
