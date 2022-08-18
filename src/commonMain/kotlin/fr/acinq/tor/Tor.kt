@@ -1,8 +1,9 @@
 package fr.acinq.tor
 
-import fr.acinq.tor.utils.*
 import fr.acinq.tor.utils.Hex
+import fr.acinq.tor.utils.deleteFile
 import fr.acinq.tor.utils.fileContent
+import fr.acinq.tor.utils.hmacSha256
 import io.ktor.network.selector.*
 import io.ktor.network.sockets.*
 import io.ktor.util.*
@@ -12,7 +13,6 @@ import io.ktor.utils.io.errors.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.consumeEach
-import kotlinx.coroutines.channels.onReceiveOrNull
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.selects.select
@@ -37,6 +37,7 @@ public class Tor(
     public val state: StateFlow<TorState> get() = _state
 
     public data class TorInfo(val version: String = "", val networkLiveness: String = "")
+
     private val _info = MutableStateFlow<TorInfo?>(null)
     public val info: StateFlow<TorInfo?> get() = _info
 
@@ -80,18 +81,20 @@ public class Tor(
 
         deleteFile(portFile)
 
-        startTorInThread(arrayOf(
-            "tor",
-            "__DisableSignalHandlers", "1",
-            "SafeSocks", "1",
-            "SocksPort", SOCKS_PORT.toString(),
-            "NoExec", "1",
-            "ControlPort", "auto",
-            "ControlPortWriteToFile", portFile,
-            "CookieAuthentication", "1",
-            "DataDirectory", dataDir,
-            "Log", "err file /dev/null" // Logs will be monitored by controller
-        ))
+        startTorInThread(
+            arrayOf(
+                "tor",
+                "__DisableSignalHandlers", "1",
+                "SafeSocks", "1",
+                "SocksPort", SOCKS_PORT.toString(),
+                "NoExec", "1",
+                "ControlPort", "auto",
+                "ControlPortWriteToFile", portFile,
+                "CookieAuthentication", "1",
+                "DataDirectory", dataDir,
+                "Log", "err file /dev/null" // Logs will be monitored by controller
+            )
+        )
 
         val portString = tryRead(portFile).decodeToString().trim()
         log(LogLevel.DEBUG, "Port control file content: $portString")
@@ -138,13 +141,11 @@ public class Tor(
         scope.launch {
             do {
                 val loop = select<Boolean> {
-                    (socketResponseChannel.onReceiveOrNull()) { reply ->
-                        if (reply == null) false
-                        else {
-                            if (reply.isAsync) handleAsyncResponse(reply)
-                            //else log(LogLevel.WARN, "Received a sync reply but did not expect one: $reply")
+                    socketResponseChannel.onReceiveCatching { reply ->
+                        reply.getOrNull()?.let {
+                            if (it.isAsync) handleAsyncResponse(it)
                             true
-                        }
+                        } ?: false
                     }
                     requestChannel.onReceive { (cmd, def) ->
                         socketRequestChannel.send(cmd)
@@ -167,7 +168,7 @@ public class Tor(
             log(LogLevel.DEBUG, "Cookie file contains ${cookie.size} bytes")
 
             val clientNonce = Random.nextBytes(1)
-            val clientNonceHex = Hex.encode(clientNonce).toUpperCase()
+            val clientNonceHex = Hex.encode(clientNonce).uppercase()
             log(LogLevel.DEBUG, "Auth challenge client nonce: $clientNonceHex")
             val acResponse = requireCommand(TorControlRequest("AUTHCHALLENGE", listOf("SAFECOOKIE", clientNonceHex)))
             val (acCommand, acValues) = acResponse.replies[0].parseCommandKeyValues()
@@ -182,7 +183,7 @@ public class Tor(
             log(LogLevel.DEBUG, "Auth server hash is valid")
 
             val clientHash = hmacSha256(SAFECOOKIE_CLIENT_KEY, authMessage)
-            requireCommand(TorControlRequest("AUTHENTICATE", listOf(Hex.encode(clientHash).toUpperCase())))
+            requireCommand(TorControlRequest("AUTHENTICATE", listOf(Hex.encode(clientHash).uppercase())))
             requireCommand(TorControlRequest("TAKEOWNERSHIP"))
             requireCommand(TorControlRequest("SETEVENTS", subscribedEvents))
             getInfo()
@@ -197,7 +198,7 @@ public class Tor(
         if (response.isSuccess) {
             val version = response.replies[0].reply.split("=")[1]
             val networkLiveness = response.replies[1].reply.split("=")[1]
-            _info.value = TorInfo(version = version.toLowerCase(), networkLiveness = networkLiveness.toLowerCase())
+            _info.value = TorInfo(version = version.lowercase(), networkLiveness = networkLiveness.lowercase())
             log(LogLevel.DEBUG, "TOR INFO: ${info.value}")
         }
     }
@@ -211,7 +212,7 @@ public class Tor(
             "STATUS_CLIENT" -> {
                 val (severity: String, action: String) = firstLine.split(' ')
 
-                val newState = when(action) {
+                val newState = when (action) {
                     "BOOTSTRAP", "ENOUGH_DIR_INFO" -> TorState.STARTING
                     "CIRCUIT_ESTABLISHED" -> TorState.RUNNING
                     else -> TorState.STOPPED
@@ -224,8 +225,8 @@ public class Tor(
 
             }
             "NETWORK_LIVENESS" -> {
-                _info.value = _info.value?.copy(networkLiveness = firstLine.toLowerCase())
-                    ?: TorInfo(networkLiveness = firstLine.toLowerCase())
+                _info.value = _info.value?.copy(networkLiveness = firstLine.lowercase())
+                    ?: TorInfo(networkLiveness = firstLine.lowercase())
             }
             else -> log(LogLevel.WARN, "Received unknown event $event (${response.replies})")
         }
@@ -239,8 +240,8 @@ public class Tor(
 
     private suspend fun requireCommand(request: TorControlRequest): TorControlResponse {
         val response = sendCommand(request)
-        if (response.isError) error("${request.command.toLowerCase().capitalize()} error: ${response.status} - ${response.replies[0].reply}")
-        log(LogLevel.DEBUG, "${request.command.toLowerCase().capitalize()} success!")
+        if (response.isError) error("${request.command.lowercase().replaceFirstChar { it.uppercase() }} error: ${response.status} - ${response.replies[0].reply}")
+        log(LogLevel.DEBUG, "${request.command.lowercase().replaceFirstChar { it.uppercase() }} success!")
         return response
     }
 

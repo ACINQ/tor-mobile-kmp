@@ -6,21 +6,19 @@ import io.ktor.network.sockets.*
 import io.ktor.util.*
 import io.ktor.utils.io.*
 import io.ktor.utils.io.core.*
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.firstOrNull
-import kotlinx.coroutines.launch
-import kotlin.test.*
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNull
+import kotlin.time.Duration
 import kotlin.time.ExperimentalTime
-import kotlin.time.minutes
-import kotlin.time.seconds
 
 @OptIn(ExperimentalTime::class, InternalAPI::class)
 class TorTest {
 
-    @Test fun bootstrap() = runSuspendTest(1.minutes) {
+    @Test fun bootstrap() = runSuspendTest(Duration.minutes(1)) {
         val tor = Tor(
             dataDirectoryPath = cachesDirectoryPath,
             log = { level, message -> println("${level.name}: $message") }
@@ -49,7 +47,7 @@ class TorTest {
         }
     }
 
-    @Test fun simpleHttpRequest() = runSuspendTest(1.minutes) {
+    @Test fun simpleHttpRequest() = runSuspendTest(Duration.minutes(1)) {
         val tor = Tor(
             dataDirectoryPath = cachesDirectoryPath,
             log = { level, message -> println("${level.name}: $message") }
