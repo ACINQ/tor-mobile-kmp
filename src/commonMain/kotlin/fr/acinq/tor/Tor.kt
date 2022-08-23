@@ -106,7 +106,9 @@ public class Tor(
 
         val selectorManager = SelectorManager()
 
-        val socket = tryConnect(selectorManager, address, port.toInt(), 15)
+        val socket = withContext(scope.coroutineContext) {
+            tryConnect(selectorManager, address, port.toInt(), 15)
+        }
         log(LogLevel.NOTICE, "Connected to Tor Control Socket.")
 
         val socketRequestChannel = Channel<TorControlRequest>()
