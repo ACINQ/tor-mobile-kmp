@@ -1,6 +1,6 @@
 plugins {
     id("com.android.library")
-    kotlin("multiplatform") version "1.5.31"
+    kotlin("multiplatform") version Versions.kotlin
     `maven-publish`
 }
 
@@ -20,12 +20,12 @@ repositories {
 }
 
 android {
-    compileSdk = 31
+    compileSdk = 33
     ndkVersion = Versions.ndk
     sourceSets["main"].manifest.srcFile("src/androidMain/AndroidManifest.xml")
     defaultConfig {
         minSdk = 21
-        targetSdk = 31
+        targetSdk = 33
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
     externalNativeBuild {
@@ -52,12 +52,10 @@ kotlin {
         }
     }
 
-    val secp256k1Version = "0.6.4"
-
     sourceSets {
         val commonMain by getting {
             dependencies {
-                api("fr.acinq.secp256k1:secp256k1-kmp:$secp256k1Version")
+                api("fr.acinq.secp256k1:secp256k1-kmp:${Versions.secp256k1}")
                 implementation("io.ktor:ktor-network:${Versions.ktor}")
                 implementation("io.ktor:ktor-network-tls:${Versions.ktor}")
             }
@@ -72,7 +70,7 @@ kotlin {
         val androidMain by getting {
             dependencies {
                 implementation(kotlin("stdlib"))
-                implementation("fr.acinq.secp256k1:secp256k1-kmp-jni-android:${secp256k1Version}")
+                implementation("fr.acinq.secp256k1:secp256k1-kmp-jni-android:${Versions.secp256k1}")
             }
         }
         val androidTest by getting {

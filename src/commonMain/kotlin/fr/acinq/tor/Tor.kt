@@ -19,7 +19,6 @@ import kotlinx.coroutines.selects.select
 import kotlin.random.Random
 
 
-@OptIn(ExperimentalCoroutinesApi::class, InternalAPI::class)
 public class Tor(
     private val dataDirectoryPath: String,
     private val log: (LogLevel, String) -> Unit = { _, _ -> }
