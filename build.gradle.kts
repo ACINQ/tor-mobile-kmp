@@ -40,6 +40,9 @@ kotlin {
 
     android {
         publishLibraryVariants("release")
+        compilations.all {
+            kotlinOptions.jvmTarget = "1.8"
+        }
     }
 
     ios {
@@ -49,9 +52,12 @@ kotlin {
         }
     }
 
+    val secp256k1Version = "0.6.4"
+
     sourceSets {
         val commonMain by getting {
             dependencies {
+                api("fr.acinq.secp256k1:secp256k1-kmp:$secp256k1Version")
                 implementation("io.ktor:ktor-network:${Versions.ktor}")
                 implementation("io.ktor:ktor-network-tls:${Versions.ktor}")
             }
@@ -63,7 +69,12 @@ kotlin {
             }
         }
 
-        val androidMain by getting
+        val androidMain by getting {
+            dependencies {
+                implementation(kotlin("stdlib"))
+                implementation("fr.acinq.secp256k1:secp256k1-kmp-jni-android:${secp256k1Version}")
+            }
+        }
         val androidTest by getting {
             dependencies {
                 implementation(kotlin("test-junit"))

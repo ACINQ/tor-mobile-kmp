@@ -1,6 +1,6 @@
 package fr.acinq.tor.socks
 
-import fr.acinq.tor.utils.Hex
+import fr.acinq.secp256k1.Hex
 import io.ktor.network.sockets.*
 import io.ktor.utils.io.*
 

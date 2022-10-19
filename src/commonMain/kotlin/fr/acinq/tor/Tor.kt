@@ -1,6 +1,6 @@
 package fr.acinq.tor
 
-import fr.acinq.tor.utils.Hex
+import fr.acinq.secp256k1.Hex
 import fr.acinq.tor.utils.deleteFile
 import fr.acinq.tor.utils.fileContent
 import fr.acinq.tor.utils.hmacSha256
