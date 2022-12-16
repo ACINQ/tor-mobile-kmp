@@ -45,7 +45,9 @@ jobs:
         with:
           java-version: 11
       - name: Install build tools
-        run: brew install autoconf automake coreutils gettext libtool po4a
+        run: |
+          brew install autoconf@2.69 automake coreutils gettext libtool po4a
+          brew link --overwrite autoconf@2.69
       - name: Check iOS
         run: ./gradlew iosX64Test
       - name: Check Android
