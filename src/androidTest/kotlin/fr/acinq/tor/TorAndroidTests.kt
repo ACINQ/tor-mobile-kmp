@@ -5,15 +5,12 @@ import fr.acinq.tor.socks.socks5Handshake
 import io.ktor.network.selector.*
 import io.ktor.network.sockets.*
 import io.ktor.network.tls.*
-import io.ktor.util.*
 import io.ktor.utils.io.*
 import junit.framework.TestCase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import org.junit.Test
 import org.junit.runner.RunWith
-import kotlin.time.Duration
-import kotlin.time.ExperimentalTime
 
 @RunWith(AndroidJUnit4::class)
 class TorAndroidTests : TestCase() {

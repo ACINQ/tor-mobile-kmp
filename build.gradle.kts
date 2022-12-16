@@ -1,14 +1,7 @@
 plugins {
-    id("com.android.library")
+    id("com.android.library") version "7.2.2"
     kotlin("multiplatform") version Versions.kotlin
     `maven-publish`
-}
-
-buildscript {
-    dependencies {
-        classpath("io.ktor:ktor-client-okhttp:${Versions.ktor}")
-        classpath("io.ktor:ktor-client-auth-jvm:${Versions.ktor}")
-    }
 }
 
 group = "fr.acinq.tor"
@@ -32,6 +25,9 @@ android {
         cmake {
             path = File("src/androidMain/c/CMakeLists.txt")
         }
+    }
+    testOptions {
+        unitTests.isReturnDefaultValues = true
     }
 }
 
@@ -77,8 +73,8 @@ kotlin {
             dependencies {
                 implementation(kotlin("test-junit"))
                 implementation("junit:junit:4.13.2")
-                implementation("androidx.test.ext:junit:1.1.3")
-                implementation("androidx.test.espresso:espresso-core:3.4.0")
+                implementation("androidx.test.ext:junit:1.1.4")
+                implementation("androidx.test.espresso:espresso-core:3.5.0")
             }
         }
 
@@ -115,11 +111,6 @@ afterEvaluate {
         }
     }
 }
-
-
-val snapshotNumber: String? by project
-val gitRef: String? by project
-val eapBranch = gitRef?.split("/")?.last() ?: "dev"
 
 publishing {
     publications.withType<MavenPublication>().configureEach {
