@@ -51,10 +51,10 @@ jobs:
           brew link --overwrite autoconf@2.69
       - name: Check iOS
         run: ./gradlew iosX64Test
-      - name: build
-        run: ./gradlew build -x check
-      - name: pubslish locally
-        run: ./gradlew publishToMavenLocal
+      - name: Build native libs
+        run: ./gradlew :native:buildLibs
+      - name: Build & publish locally
+        run: ./gradlew :build publishToMavenLocal
 #      - name: Check Android
 #        uses: reactivecircus/android-emulator-runner@v2
 #        with:
