@@ -1,7 +1,9 @@
+val buildLibs by tasks.creating { group = "build" }
 
 fun addScript(lib: String, target: String, arch: String, conf: Exec.() -> Unit): Task =
     tasks.create<Exec>("build${lib.capitalize()}${target.capitalize()}${arch.capitalize()}") {
         group = "build"
+        buildLibs.dependsOn(this)
         workingDir = projectDir
         executable = projectDir.resolve("$target/$lib.sh").absolutePath
         environment("ARCH", arch)

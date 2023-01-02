@@ -34,7 +34,8 @@ brew link --overwrite autoconf@2.69
 You can then build the library proper:
 
 ```shell
-./gradlew clean build
+./gradlew :native:buildLibs
+./gradlew :build
 # to install on your local maven repository
 ./gradlew publishToMavenLocal
 ```
