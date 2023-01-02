@@ -25,8 +25,6 @@ jobs:
     steps:
       - name: Check out
         uses: actions/checkout@v2
-#        with:
-#          submodules: 'true'
       - name: Fetch submodules
         run: git submodule update --init
       - name: Cached Konan
@@ -51,10 +49,6 @@ jobs:
           brew link --overwrite autoconf@2.69
       - name: Check iOS
         run: ./gradlew iosX64Test
-      - name: Build native libs
-        run: ./gradlew :native:buildLibs
-      - name: Build & publish locally
-        run: ./gradlew :build publishToMavenLocal
 #      - name: Check Android
 #        uses: reactivecircus/android-emulator-runner@v2
 #        with:
