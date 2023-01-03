@@ -1,7 +1,16 @@
+import org.jetbrains.dokka.Platform
+
 plugins {
     id("com.android.library") version "7.2.2"
     kotlin("multiplatform") version Versions.kotlin
+    id("org.jetbrains.dokka") version Versions.kotlin
     `maven-publish`
+}
+
+buildscript {
+    dependencies {
+        classpath("org.jetbrains.dokka:dokka-gradle-plugin:${Versions.kotlin}")
+    }
 }
 
 group = "fr.acinq.tor"
@@ -112,9 +121,45 @@ afterEvaluate {
     }
 }
 
+val javadocJar = tasks.create<Jar>("javadocJar") {
+    archiveClassifier.set("javadoc")
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
+afterEvaluate {
+    val dokkaOutputDir = buildDir.resolve("dokka")
+
+    tasks.dokkaHtml {
+        outputDirectory.set(file(dokkaOutputDir))
+        dokkaSourceSets {
+            configureEach {
+                val platformName = when (platform.get()) {
+                    Platform.jvm -> "jvm"
+                    Platform.js -> "js"
+                    Platform.native -> "native"
+                    Platform.common -> "common"
+                }
+                displayName.set(platformName)
+                perPackageOption {
+                    matchingRegex.set(".*\\.internal.*") // will match all .internal packages and sub-packages
+                    suppress.set(true)
+                }
+            }
+        }
+    }
+
+    val deleteDokkaOutputDir by tasks.register<Delete>("deleteDokkaOutputDirectory") {
+        delete(dokkaOutputDir)
+    }
+
+    javadocJar.dependsOn(deleteDokkaOutputDir, tasks.dokkaHtml)
+    javadocJar.from(dokkaOutputDir)
+}
+
 publishing {
     publications.withType<MavenPublication>().configureEach {
         version = project.version.toString()
+        artifact(javadocJar)
         pom {
             name.set("Kotlin Multiplatform Tor library")
             description.set("A Kotlin Multiplatform library for Android & iOS to start, connect to, and control a Tor proxy.")
