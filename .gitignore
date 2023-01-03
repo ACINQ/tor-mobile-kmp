@@ -13,3 +13,6 @@ local.properties
 
 # OS
 .DS_Store
+
+# artifacts for deployments
+publishing/tor-mobile-kmp-archive

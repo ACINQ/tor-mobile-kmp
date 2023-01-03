@@ -47,7 +47,7 @@ jobs:
       - name: Upload archive
         uses: actions/upload-artifact@v2
         with:
-          name: archive
+          name: tor-mobile-kmp-archive
           path: |
             maven-local
             !maven-local/**/maven-metadata-local.xml
