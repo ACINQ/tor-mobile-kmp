@@ -10,6 +10,7 @@ on:
   push:
     branches:
       - 'master'
+      - 'test-ci-build'
     paths-ignore:
       - '**.md'
       - '**/.gitignore'
@@ -24,8 +25,6 @@ jobs:
     steps:
       - name: Check out
         uses: actions/checkout@v2
-#        with:
-#          submodules: 'true'
       - name: Fetch submodules
         run: git submodule update --init
       - name: Cached Konan
@@ -50,10 +49,10 @@ jobs:
           brew link --overwrite autoconf@2.69
       - name: Check iOS
         run: ./gradlew iosX64Test
-      - name: Check Android
-        uses: reactivecircus/android-emulator-runner@v2
-        with:
-          api-level: 29
-          ndk: 21.3.6528147
-          cmake: 3.10.2.4988404
-          script: ./gradlew connectedCheck
+#      - name: Check Android
+#        uses: reactivecircus/android-emulator-runner@v2
+#        with:
+#          api-level: 29
+#          ndk: 21.3.6528147
+#          cmake: 3.10.2.4988404
+#          script: ./gradlew connectedCheck

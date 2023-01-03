@@ -1,27 +1,18 @@
-name: publish snapshot
+name: Archive library
 
 on:
-  push:
-    branches:
-      - 'snapshot/*'
-    paths-ignore:
-      - '**.md'
-      - '**.adoc'
-      - '**/.gitignore'
-      - './github/**'
-      - '!./github/workflow/snapshot.yml'
+  workflow_dispatch:
 
 jobs:
-  upload:
-    name: Upload
+  archive:
+    name: Archive
     runs-on: macos-latest
     steps:
       - name: Check out
         uses: actions/checkout@v2
-      #        with:
-      #          submodules: 'true'
       - name: Fetch submodules
         run: git submodule update --init
+
       - name: Cached Konan
         uses: actions/cache@v2
         with:
@@ -38,16 +29,25 @@ jobs:
         uses: actions/setup-java@v1
         with:
           java-version: 11
+
       - name: Install build tools
         run: |
           brew install autoconf@2.69 automake coreutils gettext libtool po4a
           brew link --overwrite autoconf@2.69
-      - name: Check iOS
-        run: ./gradlew iosX64Test
-      - name: Check Android
-        uses: reactivecircus/android-emulator-runner@v2
+
+      - name: Build native libs
+        run: ./gradlew :native:buildLibs
+      - name: Publish locally
+        run: ./gradlew publishToMavenLocal
+
+      - name: Copy artifact files
+        run: |
+          mkdir -p maven-local/archive
+          cp -r ~/.m2/repository/* maven-local/archive
+      - name: Upload archive
+        uses: actions/upload-artifact@v2
         with:
-          api-level: 29
-          ndk: 21.3.6528147
-          cmake: 3.10.2.4988404
-          script: ./gradlew connectedCheck
+          name: archive
+          path: |
+            maven-local
+            !maven-local/**/maven-metadata-local.xml
