@@ -165,8 +165,10 @@ publishing {
             description.set("A Kotlin Multiplatform library for Android & iOS to start, connect to, and control a Tor proxy.")
             url.set("https://github.com/ACINQ/tor-mobile-kmp")
             licenses {
-                name.set("Apache License v2.0")
-                url.set("https://www.apache.org/licenses/LICENSE-2.0")
+                license {
+                    name.set("Apache License v2.0")
+                    url.set("https://www.apache.org/licenses/LICENSE-2.0")
+                }
             }
             issueManagement {
                 system.set("Github")
@@ -174,6 +176,7 @@ publishing {
             }
             scm {
                 connection.set("https://github.com/ACINQ/tor-mobile-kmp.git")
+                url.set("https://github.com/ACINQ/tor-mobile-kmp")
             }
             developers {
                 developer {
