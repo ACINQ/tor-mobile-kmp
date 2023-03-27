@@ -14,7 +14,7 @@ buildscript {
 }
 
 group = "fr.acinq.tor"
-version = "0.2.0-SNAPSHOT"
+version = "0.2.0"
 
 repositories {
     google()
