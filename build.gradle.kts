@@ -1,33 +1,34 @@
 import org.jetbrains.dokka.Platform
 
 plugins {
-    id("com.android.library") version "7.2.2"
+    id("com.android.library") version "7.4.2"
     kotlin("multiplatform") version Versions.kotlin
-    id("org.jetbrains.dokka") version Versions.kotlin
+    id("org.jetbrains.dokka") version Versions.dokka
     `maven-publish`
 }
 
 buildscript {
     dependencies {
-        classpath("org.jetbrains.dokka:dokka-gradle-plugin:${Versions.kotlin}")
+        classpath("org.jetbrains.dokka:dokka-gradle-plugin:${Versions.dokka}")
     }
 }
 
 group = "fr.acinq.tor"
-version = "0.2.0"
+version = "0.3.0-SNAPSHOT"
 
 repositories {
+    maven("https://oss.sonatype.org/content/repositories/snapshots")
     google()
     mavenCentral()
 }
 
 android {
+    namespace = "fr.acinq.tor.library"
     compileSdk = 33
     ndkVersion = Versions.ndk
     sourceSets["main"].manifest.srcFile("src/androidMain/AndroidManifest.xml")
     defaultConfig {
         minSdk = 21
-        targetSdk = 33
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
     externalNativeBuild {
@@ -43,17 +44,26 @@ android {
 kotlin {
     explicitApi()
 
-    android {
+    androidTarget {
         publishLibraryVariants("release")
         compilations.all {
             kotlinOptions.jvmTarget = "1.8"
         }
     }
 
-    ios {
+    iosX64 {
         compilations["main"].cinterops.create("tor_in_thread") {
+            val platform = "IosX64"
             includeDirs.headerFilterOnly("$rootDir/native/tor_in_thread")
-            tasks[interopProcessingTaskName].dependsOn(":native:buildTor_in_thread${target!!.name.capitalize()}")
+            tasks[interopProcessingTaskName].dependsOn(":native:buildTor_in_thread${platform.capitalize()}")
+        }
+    }
+
+    iosArm64 {
+        compilations["main"].cinterops.create("tor_in_thread") {
+            val platform = "IosArm64"
+            includeDirs.headerFilterOnly("$rootDir/native/tor_in_thread")
+            tasks[interopProcessingTaskName].dependsOn(":native:buildTor_in_thread${platform.capitalize()}")
         }
     }
 
@@ -78,17 +88,14 @@ kotlin {
                 implementation("fr.acinq.secp256k1:secp256k1-kmp-jni-android:${Versions.secp256k1}")
             }
         }
-        val androidTest by getting {
+        val androidUnitTest by getting {
             dependencies {
                 implementation(kotlin("test-junit"))
                 implementation("junit:junit:4.13.2")
-                implementation("androidx.test.ext:junit:1.1.4")
-                implementation("androidx.test.espresso:espresso-core:3.5.0")
+                implementation("androidx.test.ext:junit:1.1.5")
+                implementation("androidx.test.espresso:espresso-core:3.5.1")
             }
         }
-
-        val iosMain by getting
-        val iosTest by getting
 
         all {
             languageSettings.optIn("kotlin.RequiresOptIn")
@@ -138,6 +145,7 @@ afterEvaluate {
                     Platform.js -> "js"
                     Platform.native -> "native"
                     Platform.common -> "common"
+                    Platform.wasm -> "wasm"
                 }
                 displayName.set(platformName)
                 perPackageOption {
