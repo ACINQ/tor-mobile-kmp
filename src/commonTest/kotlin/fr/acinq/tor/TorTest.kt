@@ -58,7 +58,8 @@ class TorTest {
             )
 
             tor.start(this)
-
+            tor.state.first { it == TorState.RUNNING }
+            tor.info.filterNotNull().first { it.networkLiveness == "up" }
             try {
                 SelectorManager().use { selectorManager ->
                     aSocket(selectorManager).tcp().connect(Tor.SOCKS_ADDRESS, Tor.SOCKS_PORT).use { socket ->
