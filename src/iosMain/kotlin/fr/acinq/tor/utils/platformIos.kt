@@ -8,6 +8,7 @@ import platform.Foundation.*
 import platform.posix.*
 
 
+@OptIn(ExperimentalForeignApi::class)
 internal actual suspend fun fileContent(path: String): ByteArray? {
     val file = fopen(path, "r") ?: return null
     fseek(file, 0.convert(), SEEK_END)
@@ -23,6 +24,7 @@ internal actual suspend fun deleteFile(path: String) {
     remove(path)
 }
 
+@OptIn(ExperimentalForeignApi::class)
 internal actual fun hmacSha256(key: ByteArray, message: ByteArray): ByteArray {
     val result = ByteArray(CC_SHA256_DIGEST_LENGTH)
     result.usePinned { pinnedResult ->

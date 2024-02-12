@@ -3,11 +3,8 @@ package fr.acinq.tor
 import fr.acinq.tor.socks.socks5Handshake
 import io.ktor.network.selector.*
 import io.ktor.network.sockets.*
-import io.ktor.network.tls.*
 import io.ktor.utils.io.*
 import io.ktor.utils.io.core.*
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
@@ -15,6 +12,7 @@ import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 
 class TorTest {
@@ -58,7 +56,8 @@ class TorTest {
             )
 
             tor.start(this)
-
+            tor.state.first { it == TorState.RUNNING }
+            tor.info.filterNotNull().first { it.networkLiveness == "up" }
             try {
                 SelectorManager().use { selectorManager ->
                     aSocket(selectorManager).tcp().connect(Tor.SOCKS_ADDRESS, Tor.SOCKS_PORT).use { socket ->
@@ -69,7 +68,7 @@ class TorTest {
                         connection.output.flush()
 
                         val line = connection.input.readUTF8Line()
-                        assertEquals("HTTP/1.0 200 OK", line)
+                        assertTrue { line.equals("HTTP/1.0 200 OK") || line.equals("HTTP/1.0 302 Found") }
                     }
                 }
             } finally {

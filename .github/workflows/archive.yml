@@ -6,7 +6,7 @@ on:
 jobs:
   archive:
     name: Archive
-    runs-on: macos-latest
+    runs-on: macos-14-large
     steps:
       - name: Check out
         uses: actions/checkout@v2
