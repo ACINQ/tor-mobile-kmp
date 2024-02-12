@@ -64,7 +64,7 @@ export LDFLAGS="${HOST_FLAGS}"
 ./configure \
   --host="${CHOST}" \
   --prefix="${PREFIX}" \
-  --enable-static --disable-shared \
+  --enable-static --disable-shared --disable-openssl \
   --disable-samples \
   cross_compiling="yes"
 
