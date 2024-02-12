@@ -50,7 +50,7 @@ export LDFLAGS="${HOST_FLAGS}"
 ./configure \
   --host="${CHOST}" \
   --prefix="${PREFIX}" \
-  --enable-static --disable-shared \
+  --enable-static --disable-shared --disable-openssl\
   --enable-gcc-hardening --disable-samples \
   cross_compiling="yes" ac_cv_func_clock_gettime="no"
 
