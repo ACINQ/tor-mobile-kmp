@@ -1,3 +1,9 @@
+---
+
+⚠️ This project has been deprecated and is not maintained anymore.
+
+---
+
 # Tor Mobile KMP
 
 **A Kotlin Multiplatform library for Android & iOS to start, connect to, and control a Tor proxy.**
